@@ -1,31 +1,44 @@
+#imports the Flask framework, jsonify service formats the data passed inside to JSON format (as used in the return statements) and request service helps te application to keep track of the request object
 from flask import Flask, jsonify, request
 
-#import API support from flask_restful.
+#import services from flask_restful, an extension of flask that provides support for building APIs
+#Api service is the main entry point for the application, needs to be initialized with the flask application
+#Resource assists with the creation of custom method classes, using Resource as the method's argument
 from flask_restful import Api, Resource
 
-#import Python's os module for operating system support.
+#import Python's os module for a way to use operating system functionality.
 import os
 
-# import MongoClient from pymongo for MongoDB support.
+# PyMongo contains tools to and is the recommended way to work with MongoDB in Python
+# MongoClient provides more tools to interacting with MongoDB
 from pymongo import MongoClient
 
-#define app
+# define and initialize the flask application
 app = Flask(__name__)
-#define Api
+# initializes flask_restful's Api service in the application
 api = Api(app)
-#define client and database
-client = MongoClient("mongodb://db:27017") #27017 is the default port for mongodb
+# initializes mongodb and runs it on its default port 27017
+client = MongoClient("mongodb://db:27017")
+# creates and initializes the database to be used by the application
 db = client.myNewDB
+# creates the collection to be used by the application
 VisitCounter = db["VisitCounter"]
+# inserts document in the collection
 VisitCounter.insert({
     'num_of_visits': 0
 })
-#defiine class Visit
+
+#this class keeps tracks of the number of times our api has been requested
 class Visit(Resource):
+    # defines what happens when a GET request is submitted by the user
     def get(self):
+        #looks at the current number of visits
         prev_count = VisitCounter.find({})[0]['num_of_visits']
+        #adds one to the number each time the service is called
         new_count = prev_count + 1
+        #updates the database with the new number of visits
         VisitCounter.update({}, {"$set":{"num_of_visits":new_count}})
+        #displays to the user how many times our service has been visited
         return str("Hello user, just fyi, this API service has been used " + str(new_count) + " times.")
 #define a check for the posted data
 def checkPostedData(postedData, functionName):
